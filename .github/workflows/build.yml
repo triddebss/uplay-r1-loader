@@ -18,11 +18,16 @@ jobs:
       - name: Fetch Dependencies
         run: cargo fetch --target i686-pc-windows-msvc
 
-      - name: Patch Detour for 32-bit Target
+      - name: Fix Detour Macro for x86
         shell: pwsh
         run: |
-          Get-ChildItem -Path "$env:USERPROFILE\.cargo\registry\src" -Filter "macros.rs" -Recurse | ForEach-Object {
-            (Get-Content $_.FullName) -replace 'extern "win64"', 'extern "C"' | Set-Content $_.FullName
+          $file = Get-ChildItem -Path "$env:USERPROFILE\.cargo\registry\src" -Filter "macros.rs" -Recurse | Where-Object { $_.FullName -like "*detour-0.8.1*" } | Select-Object -First 1
+          if ($file) {
+            $content = Get-Content $file.FullName -Raw
+            # Comentar las líneas de win64 para evitar conflictos en 32-bit
+            $fixed = $content -replace 'impl_hookable!\(@impl_pair \(\(\$(\w+) : \$ty\),\*\) \(extern "win64"', '/* impl_hookable!(@impl_pair (($$1 : $$ty),*) (extern "win64"'
+            $fixed = $fixed -replace '(\(extern "win64" fn\(\(\$(\w+)\),\*\) -> Ret\)\);)', '$$1 */'
+            Set-Content -Path $file.FullName -Value $fixed -NoNewline
           }
 
       - name: Build 32-bit DLL
