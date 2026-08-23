@@ -10,13 +10,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Rust 1.70 (Legacy 32-bit ABI support)
-        uses: dtolnay/rust-toolchain@master
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.70.0
           targets: i686-pc-windows-msvc
 
-      - name: Build 32-bit DLL
+      - name: Build 32-bit DLL (Allow Legacy ABI)
+        env:
+          RUSTFLAGS: "-A unsupported-calling-conventions"
         run: cargo build --release --target i686-pc-windows-msvc
 
       - name: Upload Artifact
