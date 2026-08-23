@@ -7,12 +7,20 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Rust 1.70 (Legacy 32-bit ABI support)
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: 1.70.0
           targets: i686-pc-windows-msvc
-      - run: cargo build --release --target i686-pc-windows-msvc
-      - uses: actions/upload-artifact@v4
+
+      - name: Build 32-bit DLL
+        run: cargo build --release --target i686-pc-windows-msvc
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: uplay_r1_loader_x86
           path: target/i686-pc-windows-msvc/release/*.dll
