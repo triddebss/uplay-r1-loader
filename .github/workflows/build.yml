@@ -15,9 +15,17 @@ jobs:
         with:
           targets: i686-pc-windows-msvc
 
-      - name: Build 32-bit DLL (Allow Legacy ABI)
-        env:
-          RUSTFLAGS: "-A unsupported-calling-conventions"
+      - name: Fetch Dependencies
+        run: cargo fetch --target i686-pc-windows-msvc
+
+      - name: Patch Detour for 32-bit Target
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path "$env:USERPROFILE\.cargo\registry\src" -Filter "macros.rs" -Recurse | ForEach-Object {
+            (Get-Content $_.FullName) -replace 'extern "win64"', 'extern "C"' | Set-Content $_.FullName
+          }
+
+      - name: Build 32-bit DLL
         run: cargo build --release --target i686-pc-windows-msvc
 
       - name: Upload Artifact
